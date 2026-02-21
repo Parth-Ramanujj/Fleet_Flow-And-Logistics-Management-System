@@ -7,7 +7,7 @@
   <p>A comprehensive, real-time enterprise resource planning (ERP) platform designed specifically for the logistics and supply chain industry. Optimize operations, cut costs, and manage your entire fleet from a single, unified dashboard.</p>
 
   <p>
-    <a href="https://fleet-flow-and-logistics-management.vercel.app/" target="_blank">
+    <a href="https://fleet-flow-and-logistics-management-system-lj014mjg7.vercel.app/register" target="_blank">
       <img alt="Live Web App" src="https://img.shields.io/badge/Live_Site-Visit_Now-22c55e?style=for-the-badge&logo=vercel&logoColor=white" />
     </a>
   </p>
@@ -28,7 +28,7 @@
 <br/>
 
 ## 🌐 Live Demo
-Check out the live enterprise application here: **[FleetFlow Logistics Management (Vercel)](https://fleet-flow-and-logistics-management.vercel.app/register)**
+Check out the live enterprise application here: **[FleetFlow Logistics Management (Vercel)](https://fleet-flow-and-logistics-management-system-lj014mjg7.vercel.app/register)**
 
 ---
 
