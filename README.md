@@ -109,8 +109,8 @@ To get a local development environment up and running, follow these steps:
 
 This project was ideated, designed, and developed by our amazing team for the **Odoo Hackathon Vidyapith 2026**:
 
-* **Sujal Talreja**
 * **Parth Ramanuj**
+* **Sujal Talreja**
 * **Ashish Prajapati**
 * **Yashrajsinh Rathod**
 
