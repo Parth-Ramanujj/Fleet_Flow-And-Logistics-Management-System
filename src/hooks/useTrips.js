@@ -65,8 +65,11 @@ export const useTrips = () => {
             return { error: null };
         }
         try {
-            const { error } = await supabase.from('trips').insert([tripData]);
+            // Generate a random ID like TRP-8492
+            const newRefId = `TRP-${Math.floor(1000 + Math.random() * 9000)}`;
+            const { error } = await supabase.from('trips').insert([{ ...tripData, ref_id: newRefId }]);
             if (error) throw error;
+            await fetchTrips();
             toast.success('Trip created as draft');
             return { error: null };
         } catch (error) {
@@ -85,6 +88,7 @@ export const useTrips = () => {
         try {
             const { error } = await supabase.from('trips').update({ status }).eq('id', id);
             if (error) throw error;
+            await fetchTrips();
             toast.success(`Trip status updated`);
             return { error: null };
         } catch (error) {

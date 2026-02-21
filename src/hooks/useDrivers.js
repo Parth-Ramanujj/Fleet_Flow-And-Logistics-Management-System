@@ -57,6 +57,7 @@ export const useDrivers = () => {
         try {
             const { error } = await supabase.from('drivers').insert([driverData]);
             if (error) throw error;
+            await fetchDrivers();
             toast.success('Driver added successfully');
             return { error: null };
         } catch (error) {
@@ -75,6 +76,7 @@ export const useDrivers = () => {
         try {
             const { error } = await supabase.from('drivers').update(statusUpdates).eq('id', id);
             if (error) throw error;
+            await fetchDrivers();
             toast.success('Driver updated');
             return { error: null };
         } catch (error) {

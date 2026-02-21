@@ -62,6 +62,7 @@ export const useMaintenance = () => {
         try {
             const { error } = await supabase.from('maintenance_logs').insert([logData]);
             if (error) throw error;
+            await fetchLogs();
             toast.success('Maintenance record added');
             return { error: null };
         } catch (error) {

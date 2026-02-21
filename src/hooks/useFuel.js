@@ -62,6 +62,7 @@ export const useFuel = () => {
         try {
             const { error } = await supabase.from('fuel_logs').insert([logData]);
             if (error) throw error;
+            await fetchFuelLogs();
             toast.success('Fuel entry recorded successfully');
             return { error: null };
         } catch (error) {

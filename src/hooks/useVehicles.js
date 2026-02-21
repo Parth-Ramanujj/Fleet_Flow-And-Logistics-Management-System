@@ -58,6 +58,7 @@ export const useVehicles = () => {
         try {
             const { error } = await supabase.from('vehicles').insert([{ ...vehicleData, status: 'available' }]);
             if (error) throw error;
+            await fetchVehicles();
             toast.success('Vehicle added successfully');
             return { error: null };
         } catch (error) {
@@ -76,6 +77,7 @@ export const useVehicles = () => {
         try {
             const { error } = await supabase.from('vehicles').update({ status }).eq('id', id);
             if (error) throw error;
+            await fetchVehicles();
             toast.success(`Vehicle marked as ${status.replace('_', ' ')}`);
             return { error: null };
         } catch (error) {

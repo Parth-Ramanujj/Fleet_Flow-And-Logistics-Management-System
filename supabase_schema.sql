@@ -1,29 +1,31 @@
 -- Enable UUID extension
 create extension if not exists "uuid-ossp";
 
--- 1. Profiles Table (Linked to Supabase Auth)
-create table public.profiles (
-  id uuid references auth.users on delete cascade primary key,
+-- 1. Users Table (Custom Auth)
+create table public.users (
+  id uuid default uuid_generate_v4() primary key,
+  email text not null unique,
+  password text not null,
   full_name text not null,
-  role text check (role in ('admin', 'manager', 'dispatcher')) default 'dispatcher',
+  role text check (role in ('admin', 'manager', 'dispatcher', 'safety', 'finance')) default 'manager',
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- Turn on RLS for profiles
-alter table public.profiles enable row level security;
+-- Turn on RLS for users
+alter table public.users enable row level security;
 
--- Policies for profiles
-create policy "Users can view their own profile."
-  on profiles for select
-  using ( auth.uid() = id );
+-- Policies for users
+create policy "Public access to select users"
+  on users for select
+  using ( true );
 
-create policy "Users can insert their own profile."
-  on profiles for insert
-  with check ( auth.uid() = id );
+create policy "Public access to insert users"
+  on users for insert
+  with check ( true );
 
-create policy "Users can update their own profile."
-  on profiles for update
-  using ( auth.uid() = id );
+create policy "Public access to update users"
+  on users for update
+  using ( true );
 
 -- 2. Vehicles Table
 create table public.vehicles (
@@ -38,19 +40,16 @@ create table public.vehicles (
 
 alter table public.vehicles enable row level security;
 
-create policy "Authenticated users can read vehicles"
+create policy "Public access to read vehicles"
   on vehicles for select
-  to authenticated
   using ( true );
 
-create policy "Authenticated users can insert vehicles"
+create policy "Public access to insert vehicles"
   on vehicles for insert
-  to authenticated
   with check ( true );
 
-create policy "Authenticated users can update vehicles"
+create policy "Public access to update vehicles"
   on vehicles for update
-  to authenticated
   using ( true );
 
 -- 3. Drivers Table
@@ -68,19 +67,16 @@ create table public.drivers (
 
 alter table public.drivers enable row level security;
 
-create policy "Authenticated users can read drivers"
+create policy "Public access to read drivers"
   on drivers for select
-  to authenticated
   using ( true );
 
-create policy "Authenticated users can insert drivers"
+create policy "Public access to insert drivers"
   on drivers for insert
-  to authenticated
   with check ( true );
 
-create policy "Authenticated users can update drivers"
+create policy "Public access to update drivers"
   on drivers for update
-  to authenticated
   using ( true );
 
 -- 4. Trips Table
@@ -98,19 +94,16 @@ create table public.trips (
 
 alter table public.trips enable row level security;
 
-create policy "Authenticated users can read trips"
+create policy "Public access to read trips"
   on trips for select
-  to authenticated
   using ( true );
 
-create policy "Authenticated users can insert trips"
+create policy "Public access to insert trips"
   on trips for insert
-  to authenticated
   with check ( true );
 
-create policy "Authenticated users can update trips"
+create policy "Public access to update trips"
   on trips for update
-  to authenticated
   using ( true );
 
 -- 5. Maintenance Logs Table
@@ -125,14 +118,12 @@ create table public.maintenance_logs (
 
 alter table public.maintenance_logs enable row level security;
 
-create policy "Authenticated users can read maintenance logs"
+create policy "Public access to read maintenance logs"
   on maintenance_logs for select
-  to authenticated
   using ( true );
 
-create policy "Authenticated users can insert maintenance logs"
+create policy "Public access to insert maintenance logs"
   on maintenance_logs for insert
-  to authenticated
   with check ( true );
 
 -- 6. Fuel Logs Table
@@ -148,26 +139,10 @@ create table public.fuel_logs (
 
 alter table public.fuel_logs enable row level security;
 
-create policy "Authenticated users can read fuel logs"
+create policy "Public access to read fuel logs"
   on fuel_logs for select
-  to authenticated
   using ( true );
 
-create policy "Authenticated users can insert fuel logs"
+create policy "Public access to insert fuel logs"
   on fuel_logs for insert
-  to authenticated
   with check ( true );
-
--- Handle automatic profile creation on user signup
-create function public.handle_new_user()
-returns trigger as $$
-begin
-  insert into public.profiles (id, full_name, role)
-  values (new.id, new.raw_user_meta_data->>'full_name', 'manager');
-  return new;
-end;
-$$ language plpgsql security definer;
-
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute procedure public.handle_new_user();

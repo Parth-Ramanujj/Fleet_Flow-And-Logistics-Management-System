@@ -1,27 +1,11 @@
 import { createContext, useContext, useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext({});
 
 export const useAuth = () => useContext(AuthContext);
 
-// ─── Dummy User Store: persisted in localStorage ────────────────────────────
-const STORE_KEY = 'fleetflow_users';
 const SESSION_KEY = 'fleetflow_session';
-
-const ROLE_DEFAULTS = {
-    manager: { label: 'Fleet Manager', email_suffix: 'manager' },
-    dispatcher: { label: 'Trip Dispatcher', email_suffix: 'dispatcher' },
-    safety: { label: 'Safety Officer', email_suffix: 'safety' },
-    finance: { label: 'Financial Analyst', email_suffix: 'finance' },
-};
-
-function getUsers() {
-    try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch { return []; }
-}
-
-function saveUsers(users) {
-    localStorage.setItem(STORE_KEY, JSON.stringify(users));
-}
 
 function getSession() {
     try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch { return null; }
@@ -35,7 +19,12 @@ function saveSession(sessionData) {
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+const ROLE_DEFAULTS = {
+    manager: { label: 'Fleet Manager', email_suffix: 'manager' },
+    dispatcher: { label: 'Trip Dispatcher', email_suffix: 'dispatcher' },
+    safety: { label: 'Safety Officer', email_suffix: 'safety' },
+    finance: { label: 'Financial Analyst', email_suffix: 'finance' },
+};
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
@@ -54,27 +43,32 @@ export const AuthProvider = ({ children }) => {
 
     // ── Register ──────────────────────────────────────────────────────────────
     const register = async ({ fullName, email, password, role }) => {
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        const users = getUsers();
+        // 1. Check if email already exists
+        const { data: existingUser } = await supabase
+            .from('users')
+            .select('id')
+            .ilike('email', email)
+            .maybeSingle();
 
-        if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
+        if (existingUser) {
             return { error: { message: 'An account with this email already exists.' } };
         }
 
-        const newUser = {
-            id: `usr_${Date.now()}`,
-            email,
-            password, // plaintext — dummy only, never do this in production
-            fullName,
-            role,
-            createdAt: new Date().toISOString(),
-        };
+        // 2. Insert new user into custom public.users table
+        const { data: newUser, error } = await supabase
+            .from('users')
+            .insert([{ email, password, full_name: fullName, role }])
+            .select()
+            .single();
 
-        saveUsers([...users, newUser]);
+        if (error) {
+            return { error };
+        }
 
-        // Auto-login after register
+        // 3. Auto-login after register
         const sessionUser = { id: newUser.id, email: newUser.email };
-        const sessionProfile = { full_name: newUser.fullName, role: newUser.role };
+        const sessionProfile = { full_name: newUser.full_name, role: newUser.role };
+
         setUser(sessionUser);
         setProfile(sessionProfile);
         saveSession({ user: sessionUser, profile: sessionProfile });
@@ -84,18 +78,21 @@ export const AuthProvider = ({ children }) => {
 
     // ── Login ─────────────────────────────────────────────────────────────────
     const login = async ({ email, password }) => {
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        const users = getUsers();
-        const found = users.find(
-            u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-        );
+        // Query custom public.users table
+        const { data: foundUser, error } = await supabase
+            .from('users')
+            .select('*')
+            .ilike('email', email)
+            .eq('password', password) // Validating plaintext password
+            .maybeSingle();
 
-        if (!found) {
+        if (error || !foundUser) {
             return { error: { message: 'Invalid email or password. Please try again.' } };
         }
 
-        const sessionUser = { id: found.id, email: found.email };
-        const sessionProfile = { full_name: found.fullName, role: found.role };
+        const sessionUser = { id: foundUser.id, email: foundUser.email };
+        const sessionProfile = { full_name: foundUser.full_name, role: foundUser.role };
+
         setUser(sessionUser);
         setProfile(sessionProfile);
         saveSession({ user: sessionUser, profile: sessionProfile });
