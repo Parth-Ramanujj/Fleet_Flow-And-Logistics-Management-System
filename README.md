@@ -28,7 +28,7 @@
 <br/>
 
 ## 🌐 Live Demo
-Check out the live enterprise application here: **[FleetFlow Logistics Management (Vercel)](https://fleet-flow-and-logistics-management.vercel.app/)**
+Check out the live enterprise application here: **[FleetFlow Logistics Management (Vercel)](https://fleet-flow-and-logistics-management.vercel.app/register)**
 
 ---
 
