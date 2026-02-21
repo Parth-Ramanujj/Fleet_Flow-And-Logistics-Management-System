@@ -313,7 +313,7 @@ const Login = () => {
                             </p>
                         </div>
 
-                        <FormLoader loading={loading} label="Authenticating session..." />
+                        <FormLoader loading={loading} label="Loading..." />
                     </motion.div>
                 </div>
             </div>
